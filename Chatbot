@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>دستیار مجازی - انجمن مهاجران انتاریو</title>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --deep: #0d1b2a;
+    --navy: #1b2d45;
+    --teal: #1a7c6e;
+    --teal-light: #22a090;
+    --gold: #c8973a;
+    --gold-light: #e8b86d;
+    --white: #ffffff;
+    --gray: #8a9bb0;
+    --bubble-bot: #1e3050;
+    --bubble-user: #1a7c6e;
+    --text-light: #d4e0ed;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Vazirmatn', sans-serif;
+    background: var(--deep);
+    display: flex; align-items: center; justify-content: center;
+    min-height: 100vh; padding: 20px;
+    margin: 0;
+    background-image:
+      radial-gradient(ellipse at 20% 50%, rgba(26,124,110,0.12) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 20%, rgba(200,151,58,0.08) 0%, transparent 50%);
+  }
+  #chat-window {
+    width: 430px; max-width: 100%; height: 710px; max-height: 94vh;
+    background: var(--navy); border-radius: 24px;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(200,151,58,0.2), inset 0 1px 0 rgba(255,255,255,0.05);
+    display: flex; flex-direction: column; overflow: hidden;
+    animation: slideUp 0.5s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes slideUp {
+    from { opacity:0; transform:translateY(40px) scale(0.95); }
+    to   { opacity:1; transform:translateY(0) scale(1); }
+  }
+  .chat-header {
+    background: linear-gradient(135deg,#0a1520 0%,#1b2d45 100%);
+    padding: 16px 20px; display: flex; align-items: center; gap: 12px;
+    border-bottom: 1px solid rgba(200,151,58,0.2);
+    position: relative; flex-shrink: 0;
+  }
+  .chat-header::after {
+    content:''; position:absolute; bottom:0; left:0; right:0; height:1px;
+    background:linear-gradient(90deg,transparent,var(--gold),transparent);
+  }
+  .avatar {
+    width:44px; height:44px; border-radius:50%;
+    background:linear-gradient(135deg,var(--teal),var(--teal-light));
+    display:flex; align-items:center; justify-content:center;
+    font-size:20px; flex-shrink:0; position:relative;
+    box-shadow:0 0 0 3px rgba(26,124,110,0.3),0 4px 16px rgba(26,124,110,0.4);
+  }
+  .avatar::after {
+    content:''; position:absolute; bottom:2px; right:2px;
+    width:10px; height:10px; background:#4ade80;
+    border-radius:50%; border:2px solid #0a1520;
+  }
+  .header-info { flex:1; }
+  .header-info h3 { color:var(--white); font-size:14px; font-weight:600; }
+  .header-info p  { color:var(--gold-light); font-size:11px; font-weight:300; margin-top:2px; }
+  .header-logo { font-size:10px; color:var(--gray); text-align:left; line-height:1.5; }
+  .header-logo span { display:block; color:var(--gold); font-weight:700; font-size:12px; }
+  .messages {
+    flex:1; overflow-y:auto; padding:16px 13px;
+    display:flex; flex-direction:column; gap:10px; scroll-behavior:smooth;
+  }
+  .messages::-webkit-scrollbar { width:3px; }
+  .messages::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.1); border-radius:4px; }
+  .msg { display:flex; gap:8px; max-width:93%; animation:fadeIn 0.3s ease; }
+  @keyframes fadeIn {
+    from { opacity:0; transform:translateY(8px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+  .msg.bot  { align-self:flex-end; flex-direction:row-reverse; }
+  .msg.user { align-self:flex-start; }
+  .msg-av {
+    width:29px; height:29px; border-radius:50%;
+    background:linear-gradient(135deg,var(--teal),var(--teal-light));
+    display:flex; align-items:center; justify-content:center;
+    font-size:13px; flex-shrink:0; margin-top:4px;
+  }
+  .msg-av.u { background:rgba(255,255,255,0.1); }
+  .bubble {
+    padding:11px 15px; border-radius:18px;
+    font-size:13.5px; line-height:1.75; color:var(--text-light);
+  }
+  .msg.bot  .bubble { background:var(--bubble-bot); border-radius:18px 4px 18px 18px; border:1px solid rgba(255,255,255,0.06); }
+  .msg.user .bubble { background:var(--bubble-user); border-radius:4px 18px 18px 18px; color:#fff; font-weight:500; }
+  .qr-wrap {
+    display:flex; flex-direction:column; gap:7px;
+    margin-top:6px; align-items:flex-end;
+    align-self:flex-end; max-width:97%;
+    animation:fadeIn 0.35s ease;
+  }
+  .qr {
+    background:rgba(26,124,110,0.14); border:1px solid rgba(26,124,110,0.5);
+    color:var(--teal-light); padding:9px 15px; border-radius:20px;
+    font-family:'Vazirmatn',sans-serif; font-size:13px;
+    cursor:pointer; transition:all 0.2s; text-align:right;
+  }
+  .qr:hover { background:var(--teal); border-color:var(--teal); color:#fff; transform:translateX(2px); }
+  .qr.gold  { background:rgba(200,151,58,0.13); border-color:rgba(200,151,58,0.55); color:var(--gold-light); }
+  .qr.gold:hover { background:var(--gold); border-color:var(--gold); color:#fff; }
+  .qr.cta   { background:linear-gradient(135deg,var(--teal),var(--teal-light)); border:none; color:#fff; font-weight:600; box-shadow:0 4px 14px rgba(26,124,110,0.4); }
+  .qr.cta:hover { transform:translateX(2px) translateY(-1px); box-shadow:0 6px 20px rgba(26,124,110,0.5); }
+  .typing {
+    display:flex; gap:5px; align-items:center;
+    padding:11px 15px; background:var(--bubble-bot);
+    border-radius:18px 4px 18px 18px; border:1px solid rgba(255,255,255,0.06);
+    width:fit-content; align-self:flex-end;
+  }
+  .typing span { width:7px; height:7px; background:var(--teal-light); border-radius:50%; animation:bounce 1.2s infinite; }
+  .typing span:nth-child(2) { animation-delay:0.2s; }
+  .typing span:nth-child(3) { animation-delay:0.4s; }
+  @keyframes bounce {
+    0%,80%,100% { transform:translateY(0); opacity:0.5; }
+    40%          { transform:translateY(-6px); opacity:1; }
+  }
+  .divider {
+    text-align:center; color:var(--gray); font-size:11px;
+    position:relative; margin:2px 0;
+  }
+  .divider::before,.divider::after {
+    content:''; position:absolute; top:50%; width:34%; height:1px; background:rgba(255,255,255,0.08);
+  }
+  .divider::before { right:0; } .divider::after { left:0; }
+</style>
+</head>
+<body>
+<div id="chat-window">
+  <div class="chat-header">
+    <div class="avatar">🌿</div>
+    <div class="header-info">
+      <h3>دستیار مجازی انجمن OIA</h3>
+      <p>آنلاین · پاسخ فوری</p>
+    </div>
+    <div class="header-logo"><span>OIA</span>Ontario Immigrants<br>Association</div>
+  </div>
+  <div class="messages" id="messages">
+    <div class="divider">خوش آمدید 🍁</div>
+  </div>
+
+</div>
+<script>
+const URL_MEMBERSHIP = "https://www.ontarioia.ca/pricing-plans/list";
+const URL_EVENTS     = "https://www.ontarioia.ca/events";
+const EMAIL          = "ontario.immigrants.association@gmail.com";
+const INSTAGRAM      = "https://www.instagram.com/ontario_immigrants_association";
+
+const F = {
+welcome: {
+text: `سلام و خوش آمدید! 👋\n\nمن دستیار مجازی **انجمن مهاجران انتاریو (OIA)** هستم.\nچطور می‌توانم کمکتان کنم؟`,
+replies: [
+{ l:“🏛️ انجمن OIA چیست؟”,            n:“about” },
+{ l:“💳 عضویت و مزایا”,               n:“membership” },
+{ l:“🎓 کلاس‌ها و دوره‌ها”,           n:“classes” },
+{ l:“📅 رویدادهای جاری”,              n:“events_link” },
+{ l:“❓ سوالات متداول”,               n:“faq_menu” },
+{ l:“✅ می‌خواهم عضو شوم!”,           n:“join”, s:“gold” },
+]
+},
+
+about: {
+text: `🌿 **انجمن مهاجران انتاریو (OIA)**\n\nما به **تمام مهاجران** — از هر کشوری — کمک می‌کنیم تا در جامعه کانادا ادغام شوند و رشد کنند.\n\n**بخش‌های فعال انجمن:**\n🎭 فرهنگی و هنری\n🏋️ ورزشی\n🧠 سلامت روان (Mental Health)\n💼 توانمندسازی کسب‌وکار و آنلاین‌شاپ\n🗣️ آموزش زبان انگلیسی\n🤝 خدمات اجتماعی\n\n**خدمات از طریق:**\nآموزش · کوچینگ · شبکه‌سازی · ورک‌شاپ · وبینار\n\n🌐 بیشتر فعالیت‌ها **آنلاین** هستند — گاهی هم **حضوری در تورنتو**.`,
+replies: [
+{ l:“💳 عضویت چطور کار می‌کند؟”,     n:“membership” },
+{ l:“🎓 چه کلاس‌هایی دارید؟”,        n:“classes” },
+{ l:“✅ می‌خواهم عضو شوم!”,           n:“join”, s:“gold” },
+{ l:“🔙 برگشت”,                       n:“welcome” },
+]
+},
+
+membership: {
+text: `💳 **عضویت در OIA**\n\nدرباره چه موضوعی می‌خواهید بدانید؟`,
+replies: [
+{ l:“💰 هزینه عضویت چقدر است؟”,      n:“price” },
+{ l:“🎁 مزایای عضویت چیست؟”,         n:“benefits” },
+{ l:“🏷️ آیا تخفیف وجود دارد؟”,       n:“discount” },
+{ l:“💳 روش پرداخت چیست؟”,           n:“payment” },
+{ l:“🔄 تمدید یا لغو عضویت”,         n:“cancel” },
+{ l:“✅ همین الان عضو می‌شوم!”,       n:“join”, s:“gold” },
+{ l:“🔙 برگشت”,                       n:“welcome” },
+]
+},
+
+price: {
+text: `💰 **هزینه عضویت:**\n\n🟢 **$۷۰ کانادا — برای ۶ ماه**\n\n✅ اکثر دوره‌های آموزشی برای اعضا **رایگان**\n⚡ دوره‌های تخصصی و عملی هزینه جداگانه دارند\n🏆 اعضا در **اولویت ثبت‌نام** تمام دوره‌ها هستند\n\n📌 بعد از پرداخت، **فوری** می‌توانید از کلاس‌ها استفاده کنید.`,
+replies: [
+{ l:“🎁 مزایای کامل عضویت”,          n:“benefits” },
+{ l:“🏷️ آیا تخفیف دارید؟”,           n:“discount” },
+{ l:“✅ عضو می‌شوم!”,                n:“join”, s:“gold” },
+{ l:“🔙 برگشت”,                       n:“membership” },
+]
+},
+
+benefits: {
+text: `🎁 **مزایای عضویت OIA:**\n\n✅ دسترسی رایگان به اکثر دوره‌های آموزشی\n✅ دسترسی به ویدیوهای ضبط‌شده و پاورپوینت‌ها در سایت\n✅ اولویت ثبت‌نام در دوره‌های تخصصی\n✅ سرتیفیکیت پایان دوره از انجمن مهاجران انتاریو\n✅ عضویت در گروه‌های واتساپ اختصاصی هر دوره\n✅ شرکت در جلسات شبکه‌سازی\n✅ دسترسی زودهنگام به رویدادهای OIA\n✅ تخفیف ویژه بلیط رویدادها`,
+replies: [
+{ l:“💰 هزینه عضویت چقدر است؟”,      n:“price” },
+{ l:“🏷️ آیا تخفیف دارید؟”,           n:“discount” },
+{ l:“✅ عضو می‌شوم!”,                n:“join”, s:“gold” },
+{ l:“🔙 برگشت”,                       n:“membership” },
+]
+},
+
+discount: {
+text: `🏷️ **تخفیف‌های ویژه OIA:**\n\nاین گروه‌ها با ارائه مدرک معتبر **۱۰٪ تخفیف** دریافت می‌کنند:\n\n🎓 دانشجویان\n🆘 پناهندگان\n♿ افراد دارای معلولیت (Disability)\n\n📋 فقط موقع ثبت‌نام مدرک مربوطه را نشان دهید.`,
+replies: [
+{ l:“✅ عضو می‌شوم!”,                n:“join”, s:“gold” },
+{ l:“💰 هزینه عضویت”,                n:“price” },
+{ l:“🔙 برگشت”,                       n:“membership” },
+]
+},
+
+payment: {
+text: `💳 **روش‌های پرداخت:**\n\n🌐 **آنلاین از طریق وب‌سایت** — کارت اعتباری یا دبیت\n📲 **e-Transfer** — در موارد خاص\n\n✅ بعد از پرداخت، **فوری** دسترسی به کلاس‌ها و گروه‌های واتساپ فعال می‌شود.`,
+replies: [
+{ l:“✅ عضو می‌شوم!”,                n:“join”, s:“gold” },
+{ l:“🔙 برگشت”,                       n:“membership” },
+]
+},
+
+cancel: {
+text: `🔄 **تمدید یا لغو عضویت:**\n\n⏳ عضویت برای **۶ ماه** فعال است\n✅ بعد از ۶ ماه می‌توانید **تمدید کنید یا نکنید** — کاملاً اختیاری است\n🔄 تمدید از طریق همان وب‌سایت انجام می‌شود\n\nسوال بیشتری دارید؟ مستقیم با ما تماس بگیرید.`,
+replies: [
+{ l:“✅ عضو می‌شوم!”,                n:“join”, s:“gold” },
+{ l:“📞 تماس با ما”,                 n:“contact” },
+{ l:“🔙 برگشت”,                       n:“membership” },
+]
+},
+
+classes: {
+text: `🎓 **کلاس‌ها و دوره‌های OIA**\n\nدرباره چه موضوعی می‌خواهید بدانید؟`,
+replies: [
+{ l:“📚 چه دوره‌هایی دارید؟”,        n:“class_list” },
+{ l:“🌐 آنلاین است یا حضوری؟”,       n:“class_format” },
+{ l:“🎙️ به چه زبانی تدریس می‌شود؟”,  n:“class_lang” },
+{ l:“📜 سرتیفیکیت صادر می‌شود؟”,    n:“certificate” },
+{ l:“🎬 ضبط کلاس‌ها در دسترس است؟”,  n:“recording” },
+{ l:“🔙 برگشت”,                       n:“welcome” },
+]
+},
+
+class_list: {
+text: `📚 **دوره‌ها و کارگاه‌های OIA:**\n\n🗣️ **آموزش زبان**\nانگلیسی Basic، Intermediate، Free Discussion\nفرانسه Basic\nفارسی برای کودکان\n\n💼 **کسب‌وکار و کارآفرینی**\nفروش در بازارها و نمایشگاه‌ها\nبازاریابی شخصی و تجاری\nمدیریت آنلاین‌شاپ\nدوره Etsy\n\n📱 **مهارت‌های دیجیتال و برندینگ**\nاینستاگرام برندینگ\nعکاسی برای تولید محتوا با موبایل\nCanva و طراحی گرافیک\nسیستم POS\nلینکدین\nآموزش Word و Excel\n\n🎨 **هنری و خلاقانه**\nکلاس‌های رزین\nنقاشی روی پارچه\nنقاشی روی بوم\nسفالگری\n\n🧠 **توسعه فردی و کاریابی**\nتاب‌آوری روانی و سلامت روان\nرزومه‌نویسی و کاریابی\nآموزش مالی\nحقوق شهروندی در مهاجرت\n\n✨ برنامه‌های جدید هم مرتباً اضافه می‌شوند!\nاز طریق سایت، اینستاگرام و واتساپ اطلاع‌رسانی می‌شود.\n\n🌐 ontarioia.ca`,
+replies: [
+{ l:“📅 مشاهده رویدادهای جاری”,      n:“events_link”, s:“cta” },
+{ l:“✅ عضو می‌شوم!”,                n:“join”, s:“gold” },
+{ l:“🔙 برگشت”,                       n:“classes” },
+]
+},
+
+class_format: {
+text: `🌐 **فرمت کلاس‌ها:**\n\n💻 **بیشتر آنلاین** — از طریق Zoom\nلینک بعد از ثبت‌نام ارسال می‌شود\n\n🏙️ **گاهی حضوری در تورنتو**\nرویدادهای شبکه‌سازی، نمایشگاه‌ها، پیک‌نیک\n\n📲 اطلاعات هر رویداد از طریق واتساپ، سایت و اینستاگرام اعلام می‌شود.`,
+replies: [
+{ l:“✅ عضو می‌شوم!”,                n:“join”, s:“gold” },
+{ l:“🔙 برگشت”,                       n:“classes” },
+]
+},
+
+class_lang: {
+text: `🎙️ **زبان تدریس:**\n\nاکثر کلاس‌ها و دوره‌های OIA **به زبان فارسی** برگزار می‌شوند.\n\n🌱 مهاجران فارسی‌زبان می‌توانند بدون نگرانی از زبان، از تمام آموزش‌ها بهره‌مند شوند.`,
+replies: [
+{ l:“✅ عضو می‌شوم!”,                n:“join”, s:“gold” },
+{ l:“🔙 برگشت”,                       n:“classes” },
+]
+},
+
+certificate: {
+text: `📜 **سرتیفیکیت (گواهینامه):**\n\nبله! برای بسیاری از دوره‌ها **سرتیفیکیت پایان دوره** از انجمن مهاجران انتاریو صادر می‌شود.\n\n✅ این گواهینامه می‌تواند در رزومه و پروفایل حرفه‌ای شما استفاده شود.`,
+replies: [
+{ l:“📚 لیست دوره‌ها”,               n:“class_list” },
+{ l:“✅ عضو می‌شوم!”,                n:“join”, s:“gold” },
+{ l:“🔙 برگشت”,                       n:“classes” },
+]
+},
+
+recording: {
+text: `🎬 **ضبط کلاس‌ها:**\n\n✅ ویدیوهای ضبط‌شده و پاورپوینت‌ها در **وب‌سایت OIA** در دسترس اعضاست\n⚠️ همه کلاس‌ها ضبط نمی‌شوند\n\nدسترسی به محتوا تا پایان دوره عضویت فعال است.`,
+replies: [
+{ l:“✅ عضو می‌شوم!”,                n:“join”, s:“gold” },
+{ l:“🔙 برگشت”,                       n:“classes” },
+]
+},
+
+faq_menu: {
+text: `❓ **سوالات متداول**\n\nکدام سوال را دارید؟`,
+replies: [
+{ l:“🌍 آیا باید ایرانی باشم؟”,           n:“faq_who” },
+{ l:“⏰ بعد از عضویت کِی شروع کنم؟”,     n:“faq_start” },
+{ l:“📲 چطور به گروه واتساپ وصل می‌شوم؟”, n:“faq_whatsapp” },
+{ l:“🏠 در شهر دیگری هستم، می‌توانم عضو شوم؟”, n:“faq_city” },
+{ l:“💼 کسب‌وکار ندارم، می‌توانم عضو شوم؟”,   n:“faq_nobiz” },
+{ l:“🔁 کلاسی را از دست دادم، چه کنم؟”,  n:“faq_missed” },
+{ l:“🔒 سوالات پرداخت و امنیت”,           n:“payment_security” },
+{ l:“🔙 برگشت”,                            n:“welcome” },
+]
+},
+
+payment_security: {
+text: `🔒 **پرداخت و امنیت**\n\nدرباره چه موضوعی می‌خواهید بدانید؟`,
+replies: [
+{ l:“🔐 آیا پرداخت آنلاین امن است؟”,      n:“pay_safe” },
+{ l:“💳 روش‌های پرداخت چیست؟”,            n:“payment” },
+{ l:“❌ پرداخت ناموفق بود، چه کنم؟”,      n:“pay_fail” },
+{ l:“🔄 آیا بازپرداخت (Refund) دارید؟”,   n:“pay_refund” },
+{ l:“🧾 فاکتور رسمی می‌دهید؟”,            n:“pay_invoice” },
+{ l:“🔙 برگشت”,                            n:“faq_menu” },
+]
+},
+
+pay_safe: {
+text: `🔐 **امنیت پرداخت:**\n\nبله، پرداخت در وب‌سایت OIA کاملاً امن است.\n\n✅ سایت از پروتکل امن HTTPS استفاده می‌کند\n✅ اطلاعات کارت شما مستقیماً توسط درگاه پرداخت معتبر پردازش می‌شود\n✅ OIA به اطلاعات کارت بانکی شما دسترسی ندارد\n\n🌐 ontarioia.ca`,
+replies: [
+{ l:“✅ عضو می‌شوم!”,                      n:“join”, s:“gold” },
+{ l:“🔙 برگشت”,                            n:“payment_security” },
+]
+},
+
+pay_fail: {
+text: `❌ **پرداخت ناموفق بود؟**\n\nنگران نباشید! این موارد را چک کنید:\n\n1️⃣ مطمئن شوید کارت شما برای پرداخت آنلاین فعال است\n2️⃣ موجودی کافی داشته باشید\n3️⃣ یک بار دیگر امتحان کنید\n\nاگر مشکل ادامه داشت با ما تماس بگیرید:\n📧 ontario.immigrants.association@gmail.com`,
+replies: [
+{ l:“📧 ارسال ایمیل به ما”,                n:”_openEmail”, s:“cta” },
+{ l:“🔙 برگشت”,                            n:“payment_security” },
+]
+},
+
+pay_refund: {
+text: `🔄 **بازپرداخت (Refund):**\n\nمتأسفانه انجمن OIA سیاست بازپرداخت ندارد و هزینه عضویت قابل استرداد نیست.\n\nبنابراین قبل از خرید، اگر سوالی دارید حتماً با ما تماس بگیرید تا مطمئن شوید عضویت برای شما مناسب است.\n\n📧 ontario.immigrants.association@gmail.com`,
+replies: [
+{ l:“📧 سوال دارم، ایمیل می‌زنم”,          n:”_openEmail”, s:“cta” },
+{ l:“✅ مطمئنم، عضو می‌شوم!”,              n:“join”, s:“gold” },
+{ l:“🔙 برگشت”,                            n:“payment_security” },
+]
+},
+
+pay_invoice: {
+text: `🧾 **فاکتور رسمی:**\n\nبله! بعد از پرداخت موفق یک ایمیل تأیید به آدرس ایمیل ثبت‌شده شما ارسال می‌شود که به عنوان رسید پرداخت قابل استفاده است.\n\nاگر ایمیل دریافت نکردید پوشه Spam را چک کنید یا با ما تماس بگیرید.`,
+replies: [
+{ l:“✅ عضو می‌شوم!”,                      n:“join”, s:“gold” },
+{ l:“🔙 برگشت”,                            n:“payment_security” },
+]
+},
+
+faq_who: {
+text: `🌍 **آیا باید ایرانی باشم؟**\n\nخیر! OIA برای **تمام مهاجران از هر کشوری** باز است.\n\nتنها چیزی که اهمیت دارد اینه که می‌خواهید در جامعه کانادا رشد کنید و ادغام شوید — چه تازه‌وارد باشید، چه سال‌هاست اینجا هستید.\n\n🌱 فرهنگ‌ها و ملیت‌های مختلف در OIA کنار هم هستند.`,
+replies: [
+{ l:“✅ عضو می‌شوم!”,                n:“join”, s:“gold” },
+{ l:“❓ سوال دیگری دارم”,            n:“faq_menu” },
+{ l:“🔙 برگشت”,                       n:“welcome” },
+]
+},
+
+faq_start: {
+text: `⏰ **بعد از عضویت چه زمانی شروع کنم؟**\n\n**فوری!** ✅\n\nبه محض تکمیل پرداخت:\n📲 به گروه‌های واتساپ دوره‌های انتخابی اضافه می‌شوید\n🎓 می‌توانید در کلاس‌های جاری شرکت کنید\n📂 به محتوای سایت دسترسی دارید\n\nهیچ انتظاری نیست!`,
+replies: [
+{ l:“✅ همین الان عضو می‌شوم!”,       n:“join”, s:“gold” },
+{ l:“❓ سوال دیگری دارم”,            n:“faq_menu” },
+]
+},
+
+faq_whatsapp: {
+text: `📲 **گروه‌های واتساپ OIA:**\n\nبعد از عضویت، بر اساس دوره‌هایی که انتخاب می‌کنید به **گروه‌های واتساپ اختصاصی** آن دوره‌ها اضافه می‌شوید.\n\n🌐 OIA یک **کامیونیتی واتساپ** دارد که هر برنامه و دوره‌ای گروه مجزای خودش را دارد.\n\n📌 لینک واتساپ عمومی در وب‌سایت ontarioia.ca موجود است.`,
+replies: [
+{ l:“✅ عضو می‌شوم!”,                n:“join”, s:“gold” },
+{ l:“❓ سوال دیگری دارم”,            n:“faq_menu” },
+]
+},
+
+faq_city: {
+text: `🏠 **در شهر دیگری هستم، می‌توانم عضو شوم؟**\n\nبله! ✅\n\nچون بیشتر کلاس‌ها **آنلاین** هستند، از هر شهری در کانادا می‌توانید عضو شوید و شرکت کنید.\n\n🏙️ فقط رویدادهای حضوری مخصوص منطقه تورنتو هستند.`,
+replies: [
+{ l:“✅ عضو می‌شوم!”,                n:“join”, s:“gold” },
+{ l:“❓ سوال دیگری دارم”,            n:“faq_menu” },
+]
+},
+
+faq_nobiz: {
+text: `💼 **کسب‌وکار ندارم، می‌توانم عضو شوم؟**\n\nقطعاً! ✅\n\nOIA فقط برای کارآفرینان نیست. دوره‌های ما شامل:\n🧠 سلامت روان و تاب‌آوری\n🗣️ مهارت‌های زبانی\n🎨 هنر و خلاقیت\n🤝 شبکه‌سازی اجتماعی\n\nهر مهاجری که می‌خواهد رشد کند و با جامعه ارتباط بگیرد خوش‌آمد است.`,
+replies: [
+{ l:“✅ عضو می‌شوم!”,                n:“join”, s:“gold” },
+{ l:“📚 لیست دوره‌ها”,               n:“class_list” },
+{ l:“❓ سوال دیگری دارم”,            n:“faq_menu” },
+]
+},
+
+faq_missed: {
+text: `🔁 **کلاسی را از دست دادم، چه کنم؟**\n\nنگران نباشید! 😊\n\n🎬 اگر کلاس ضبط شده باشد، ویدیو و پاورپوینت در **وب‌سایت OIA** در دسترس اعضاست\n⚠️ همه کلاس‌ها ضبط نمی‌شوند\n\n📲 از طریق گروه واتساپ آن دوره می‌توانید با سایر اعضا در تماس باشید.`,
+replies: [
+{ l:“✅ عضو می‌شوم!”,                n:“join”, s:“gold” },
+{ l:“❓ سوال دیگری دارم”,            n:“faq_menu” },
+]
+},
+
+join: {
+text: `🎉 **عالیه! خوش‌آمدید به جامعه OIA!**\n\n🟢 **عضویت عمومی — $۷۰ کانادا / ۶ ماه**\n\n📋 **مراحل عضویت:**\n\n1️⃣ روی دکمه زیر کلیک کنید تا به صفحه عضویت بروید\n2️⃣ یک حساب کاربری با ایمیل و پسورد بسازید\n3️⃣ پلن عضویت عمومی را انتخاب و پرداخت کنید\n\n🎓 **بعد از عضویت:**\nهر دوره‌ای که خواستید شرکت کنید، برید و ثبت‌نام کنید. موقع پرداخت چون با همان ایمیل و یوزرنیم عضو وارد شدید، تخفیف **۱۰۰٪** می‌خورد و می‌توانید **رایگان** ثبت‌نام کنید!\n\n🏷️ دانشجو، پناهنده یا دارای معلولیت هستید؟\nبا ارائه مدرک **۱۰٪ تخفیف** روی هزینه عضویت دارید.\n\n🌐 ontarioia.ca`,
+replies: [
+{ l:“🔗 رفتن به صفحه عضویت”,         n:”_openMembership”, s:“cta” },
+{ l:“🏷️ اطلاعات تخفیف”,              n:“discount” },
+{ l:“❓ سوال دیگری دارم”,            n:“faq_menu” },
+]
+},
+
+events_link: {
+text: `📅 **رویدادها و برنامه‌های جاری OIA**\n\nکدام رویداد را می‌خواهید بدانید؟`,
+replies: [
+{ l:“🏋️ کلاس ورزش و تندرستی”,        n:“event_sport” },
+{ l:“🛍️ کلاس آموزشی Etsy”,            n:“event_etsy” },
+{ l:“🗣️ کلاس مکالمه انگلیسی”,         n:“event_english” },
+{ l:“🔗 مشاهده همه رویدادها در سایت”, n:”_openEvents”, s:“cta” },
+{ l:“🔙 برگشت”,                        n:“welcome” },
+]
+},
+
+event_sport: {
+text: `🏋️ **کلاس ورزش و تندرستی آنلاین**\n\n📅 شروع دوره: ۲۷ آوریل\n🗓️ روزها: دوشنبه و چهارشنبه\n⏰ ساعت: ۱۰ تا ۱۱ صبح\n\n💰 **هزینه:**\n✅ اعضای OIA: رایگان\n💵 غیراعضا: $۲۰ در ماه\n\n🎁 **۲ جلسه اول رایگان برای همه!**\nمی‌توانید دوره را امتحان کنید و بعد تصمیم بگیرید.\n\n🌐 ontarioia.ca`,
+replies: [
+{ l:“✅ عضو می‌شوم تا رایگان شرکت کنم!”, n:“join”, s:“gold” },
+{ l:“🔗 ثبت‌نام در سایت”,               n:”_openEvents”, s:“cta” },
+{ l:“🛍️ رویداد بعدی: کلاس Etsy”,        n:“event_etsy” },
+{ l:“🔙 برگشت”,                          n:“events_link” },
+]
+},
+
+event_etsy: {
+text: `🛍️ **کلاس آموزشی Etsy**\n\n📅 تاریخ‌ها: ۴، ۵ و ۹ می\n⏰ ساعت: ۶ تا ۸ شب\n\n💰 **هزینه:**\n✅ اعضای OIA: رایگان\n💵 غیراعضا: $۳۰\n\n📌 در این دوره یاد می‌گیرید چطور فروشگاه Etsy راه‌اندازی کنید و محصولاتتان را آنلاین بفروشید.\n\n🌐 ontarioia.ca`,
+replies: [
+{ l:“✅ عضو می‌شوم تا رایگان شرکت کنم!”, n:“join”, s:“gold” },
+{ l:“🔗 ثبت‌نام در سایت”,               n:”_openEvents”, s:“cta” },
+{ l:“🏋️ رویداد قبلی: کلاس ورزش”,        n:“event_sport” },
+{ l:“🔙 برگشت”,                          n:“events_link” },
+]
+},
+
+contact: {
+text: `📞 **تماس با انجمن مهاجران انتاریو:**\n\n🌐 وب‌سایت: ontarioia.ca\n📧 ایمیل: ontario.immigrants.association@gmail.com\n📸 اینستاگرام: @ontario_immigrants_association\n💬 واتساپ: لینک در وب‌سایت موجود است\n\nمعمولاً ظرف ۲۴ ساعت پاسخ می‌دهیم.`,
+replies: [
+{ l:“📧 ارسال ایمیل”,                n:”_openEmail”, s:“cta” },
+{ l:“📸 اینستاگرام ما”,              n:”_openInsta” },
+{ l:“🔙 برگشت”,                       n:“welcome” },
+]
+},
+
+fallback: {
+text: `متوجه سوالتان نشدم 😊\n\nیکی از گزینه‌های زیر را انتخاب کنید یا مستقیم با ما تماس بگیرید:`,
+replies: [
+{ l:“🏛️ درباره انجمن”,              n:“about” },
+{ l:“💳 عضویت”,                     n:“membership” },
+{ l:“🎓 کلاس‌ها”,                   n:“classes” },
+{ l:“❓ سوالات متداول”,             n:“faq_menu” },
+{ l:“📞 تماس با ما”,                n:“contact” },
+]
+},
+
+event_english: {
+text: `🗣️ **کلاس مکالمه زبان انگلیسی**\n\n📊 سطح: Intermediate\n🗓️ روز: چهارشنبه‌ها\n⏰ ساعت: ۳:۳۰ تا ۵:۳۰ بعدازظهر\n\n💰 **هزینه:**\n✅ اعضای OIA: رایگان\n💵 غیراعضا: $۲۰ در ماه\n\n🎁 **یک جلسه مهمان رایگان برای همه!**\nاول امتحان کنید، بعد تصمیم بگیرید.\n\n🌐 ontarioia.ca`,
+replies: [
+{ l:“✅ عضو می‌شوم تا رایگان شرکت کنم!”, n:“join”, s:“gold” },
+{ l:“🔗 ثبت‌نام در سایت”,               n:”_openEvents”, s:“cta” },
+{ l:“🏋️ کلاس ورزش و تندرستی”,           n:“event_sport” },
+{ l:“🛍️ کلاس Etsy”,                     n:“event_etsy” },
+{ l:“🔙 برگشت”,                          n:“events_link” },
+]
+},
+
+_openMembership: { action(){ window.open(URL_MEMBERSHIP,’_blank’); }, redirect:“join” },
+_openEvents:     { action(){ window.open(URL_EVENTS,’_blank’); },    redirect:“welcome” },
+_openEmail:      { action(){ window.open(‘mailto:’+EMAIL,’_blank’); }, redirect:“contact” },
+_openInsta:      { action(){ window.open(INSTAGRAM,’_blank’); },     redirect:“contact” },
+};
+
+const msgEl = document.getElementById(‘messages’);
+function scroll(){ msgEl.scrollTop = msgEl.scrollHeight; }
+
+function showTyping(){
+const t=document.createElement(‘div’); t.className=‘typing’; t.id=‘typing’;
+t.innerHTML=’<span></span><span></span><span></span>’;
+msgEl.appendChild(t); scroll();
+}
+function hideTyping(){ const t=document.getElementById(‘typing’); if(t)t.remove(); }
+
+function addMsg(text,isUser=false){
+const w=document.createElement(‘div’); w.className=`msg ${isUser?'user':'bot'}`;
+const av=document.createElement(‘div’); av.className=‘msg-av’+(isUser?’ u’:’’);
+av.textContent=isUser?‘👤’:‘🌿’;
+const b=document.createElement(‘div’); b.className=‘bubble’;
+b.innerHTML=text.replace(/\n/g,’<br>’).replace(/**(.*?)**/g,’<strong>$1</strong>’);
+w.appendChild(av); w.appendChild(b); msgEl.appendChild(w); scroll();
+}
+
+function addReplies(replies){
+const w=document.createElement(‘div’); w.className=‘qr-wrap’;
+replies.forEach(r=>{
+const btn=document.createElement(‘button’);
+btn.className=‘qr’+(r.s===‘gold’?’ gold’:r.s===‘cta’?’ cta’:’’);
+btn.textContent=r.l; btn.onclick=()=>pick(r); w.appendChild(btn);
+});
+msgEl.appendChild(w); scroll();
+}
+
+function pick(r){ addMsg(r.l,true); setTimeout(()=>go(r.n),300); }
+
+function go(key){
+const f=F[key]; if(!f) return;
+if(f.action){ f.action(); go(f.redirect); return; }
+showTyping();
+setTimeout(()=>{
+hideTyping(); addMsg(f.text);
+if(f.replies) setTimeout(()=>addReplies(f.replies),180);
+}, 500+Math.random()*400);
+}
+
+setTimeout(()=>go(‘welcome’),700);
+</script>
+
+</body>
+</html>
